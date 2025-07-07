@@ -1,1 +1,1 @@
-# netbackup_public
+# NetBacku Public Resource
