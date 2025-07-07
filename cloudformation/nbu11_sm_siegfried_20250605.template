@@ -1,0 +1,2692 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Snapshot Manager deployment template.  Snapshot Manager is distributed
+  as a Docker container image that is built on Red Hat Enterprise Linux 8.8
+Mappings:
+  AWSAMIRegionMap:
+    us-east-1:
+      AMI: ami-01e66139531497019
+    us-west-2:
+      AMI: ami-0a50323e1a2375704
+    us-west-1:
+      AMI: ami-0e8e010b3891d97c9
+    us-east-2:
+      AMI: ami-0f9528e9f54a004de
+    sa-east-1:
+      AMI: ami-03c86bb8658d880be
+    me-south-1:
+      AMI: ami-0b9178c8c2596e0a8
+    me-central-1:
+      AMI: ami-02023eb340a4c3e50
+    il-central-1:
+      AMI: ami-0406b949f4054fc56
+    eu-west-3:
+      AMI: ami-08b6c2f99799431eb
+    eu-west-2:
+      AMI: ami-09bab200c71f102fe
+    eu-west-1:
+      AMI: ami-0a840ee76f48b78d9
+    eu-south-2:
+      AMI: ami-0e30bfc4a133d6e5a
+    eu-south-1:
+      AMI: ami-0a4b434264eab7dc9
+    eu-north-1:
+      AMI: ami-01f4fe08dcc5e8c1d
+    eu-central-2:
+      AMI: ami-02c826325a7072f6b
+    eu-central-1:
+      AMI: ami-03509b435baf9f889
+    ca-west-1:
+      AMI: ami-0a8bc9904d88b84a0
+    ca-central-1:
+      AMI: ami-0744b3addf838e5c2
+    ap-southeast-4:
+      AMI: ami-01c6cf4acfc90767f
+    ap-southeast-3:
+      AMI: ami-0edf1ad074424d3f0
+    ap-southeast-2:
+      AMI: ami-03f8d3efb32febc03
+    ap-southeast-1:
+      AMI: ami-03d061e6c9c1bef8b
+    ap-south-2:
+      AMI: ami-0d94a6b4dbf0424ec
+    ap-south-1:
+      AMI: ami-0381a40277519f59f
+    ap-northeast-3:
+      AMI: ami-0999f90c949a57968
+    ap-northeast-2:
+      AMI: ami-0c7d46f512d4cd466
+    ap-northeast-1:
+      AMI: ami-0be9dd648bbd32347
+    ap-east-1:
+      AMI: ami-0799be4db75fc2a90
+    af-south-1:
+      AMI: ami-021296140ef9bc006
+    us-gov-east-1:
+      AMI: ami-0258b7d4d70ff1049
+    us-gov-west-1:
+      AMI: ami-0ac525d8b8b04a4da
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Snapshot Manager System Configuration
+      Parameters:
+      - NBSMInstanceType
+      - NBSMVolumeSize
+      - NBSMRole
+    - Label:
+        default: Snapshot Manager Upgrade Configuration
+      Parameters:
+      - NBSMVolumeID
+      - NBSMVolumeSnapshot
+    - Label:
+        default: Network Configuration
+      Parameters:
+      - NBSMVPC
+      - NBSMSubnet
+      - NBSMAvailabilityZone
+      - InboundAccessCIDR
+      - NBSMVPCDomainName
+      - NBSMElasticIP
+      - NBSMHttpProxy
+      - NBSMHttpsProxy
+      - NBSMNoProxy
+    - Label:
+        default: Snapshot Manager Configuration
+      Parameters:
+      - NBSMServerName
+      - NBSMPort
+    - Label:
+        default: Snapshot Manager Recovery Notification Configuration
+      Parameters:
+      - SNSTopicARN
+    - Label:
+        default: Snapshot Manager KMS configuration
+      Parameters:
+      - CMKID
+      - CMKRegion
+    - Label:
+        default: Security Configuration
+      Parameters:
+      - KeyName
+    - Label:
+        default: Snapshot Manager Registration with Netbackup
+      Parameters:
+      - NBServer
+      - NBAPIKey
+    ParameterLabels:
+      NBSMInstanceType:
+        default: EC2 Instance Type *
+      NBSMVolumeID:
+        default: EBS Volume ID
+      NBSMVolumeSize:
+        default: Volume Size *
+      NBSMRole:
+        default: IAM Role
+      NBSMVolumeSnapshot:
+        default: Volume Snapshot ID
+      KeyName:
+        default: Key Pair Name *
+      NBSMSubnet:
+        default: Snapshot Manager Subnet *
+      NBSMVPC:
+        default: Snapshot Manager VPC *
+      NBSMVPCDomainName:
+        default: Snapshot Manager Domain Name *
+      InboundAccessCIDR:
+        default: Inbound Access CIDR
+      NBSMElasticIP:
+        default: Elastic IP
+      NBSMAvailabilityZone:
+        default: Availability Zone *
+      NBSMHttpProxy:
+        default: HTTP Proxy
+      NBSMHttpsProxy:
+        default: HTTPS Proxy
+      NBSMNoProxy:
+        default: NO Proxy
+      NBSMServerName:
+        default: Snapshot Manager Server Name *
+      NBSMPort:
+        default: Port *
+      SNSTopicARN:
+        default: SNS Topic ARN
+      CMKID:
+        default: CMK ID
+      CMKRegion:
+        default: CMK Region
+      NBServer:
+        default: NetBackup Server *
+      NBAPIKey:
+        default: NetBackup API Key *
+Parameters:
+  NBSMInstanceType:
+    Description: Select the EC2 instance type that you want to use for the Snapshot
+      Manager instance
+    Type: String
+    Default: t3.xlarge
+    AllowedValues:
+    - t2.xlarge
+    - t2.2xlarge
+    - t3.xlarge
+    - t3.2xlarge
+    - t3a.xlarge
+    - t3a.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m4.16xlarge
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.8xlarge
+    - m5.12xlarge
+    - m5.16xlarge
+    - m5.24xlarge
+    - m5d.xlarge
+    - m5d.2xlarge
+    - m5d.4xlarge
+    - m5d.8xlarge
+    - m5d.12xlarge
+    - m5d.16xlarge
+    - m5d.24xlarge
+    - m5a.xlarge
+    - m5a.2xlarge
+    - m5a.4xlarge
+    - m5a.8xlarge
+    - m5a.12xlarge
+    - m5a.16xlarge
+    - m5a.24xlarge
+    - m5ad.xlarge
+    - m5ad.2xlarge
+    - m5ad.4xlarge
+    - m5ad.12xlarge
+    - m5ad.24xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    - c5.12xlarge
+    - c5.18xlarge
+    - c5.24xlarge
+    - r4.xlarge
+    - r4.2xlarge
+    - r4.4xlarge
+    - r4.8xlarge
+    - r4.16xlarge
+    - r5.large
+    - r5.xlarge
+    - r5.2xlarge
+    - r5.4xlarge
+    - r5.8xlarge
+    - r5.12xlarge
+    - r5.16xlarge
+    - r5.24xlarge
+    - r5d.large
+    - r5d.xlarge
+    - r5d.2xlarge
+    - r5d.4xlarge
+    - r5d.8xlarge
+    - r5d.12xlarge
+    - r5d.16xlarge
+    - r5d.24xlarge
+    - r5a.large
+    - r5a.xlarge
+    - r5a.2xlarge
+    - r5a.4xlarge
+    - r5a.8xlarge
+    - r5a.12xlarge
+    - r5a.16xlarge
+    - r5a.24xlarge
+    - r5ad.large
+    - r5ad.xlarge
+    - r5ad.2xlarge
+    - r5ad.4xlarge
+    - r5ad.12xlarge
+    - r5ad.24xlarge
+    - x1.16xlarge
+    - x1.32xlarge
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - i3.16xlarge
+    - f1.2xlarge
+    - f1.16xlarge
+    ConstraintDescription: "Allowed values are t2.xlarge, t2.2xlarge,\n t3.xlarge,\
+      \ t3.2xlarge,\n t3a.xlarge, t3a.2xlarge,\n m4.large, m4.xlarge, m4.2xlarge,\
+      \ m4.4xlarge, m4.10xlarge, m4.16xlarge,\n m5.large, m5.xlarge, m5.2xlarge,m5.4xlarge,\
+      \ m5.8xlarge, m5.12xlarge, m5.16xlarge, m5.24xlarge,\n m5d.xlarge, m5d.2xlarge,\
+      \ m5d.4xlarge, m5d.8xlarge, m5d.12xlarge, m5d.16xlarge, m5d.24xlarge,\n m5a.xlarge,\
+      \ m5a.2xlarge, m5a.4xlarge, m5a.8xlarge, m5a.12xlarge, m5a.16xlarge, m5a.24xlarge,\n\
+      \ m5ad.xlarge, m5ad.2xlarge, m5ad.4xlarge, m5ad.12xlarge, m5ad.24xlarge,\n c4.4xlarge,\
+      \ c4.8xlarge,\n c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.12xlarge, c5.18xlarge,\
+      \ c5.24xlarge,\n r4.xlarge, r4.2xlarge, r4.4xlarge, r4.8xlarge, r4.16xlarge,\n\
+      \ r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.8xlarge, r5.12xlarge, r5.16xlarge,\
+      \ r5.24xlarge,\n r5d.large, r5d.xlarge, r5d.2xlarge, r5d.4xlarge, r5d.8xlarge,\
+      \ r5d.12xlarge, r5d.16xlarge, r5d.24xlarge,\n r5a.large, r5a.xlarge, r5a.2xlarge,\
+      \ r5a.4xlarge, r5a.8xlarge, r5a.12xlarge, r5a.16xlarge, r5a.24xlarge,\n r5ad.large,\
+      \ r5ad.xlarge, r5ad.2xlarge, r5ad.4xlarge, r5ad.12xlarge, r5ad.24xlarge,\n x1.16xlarge,\
+      \ x1.32xlarge,\n i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge, i3.16xlarge,\n\
+      \ f1.2xlarge, f1.16xlarge"
+  NBSMVolumeSize:
+    Description: Enter the size (GB) of the EBS volume that will be attached to the
+      Snapshot Manager instance
+    Type: Number
+    Default: '60'
+    MinValue: 60
+    ConstraintDescription: Must be a size value larger than 60 GB
+  NBSMVolumeSnapshot:
+    Default: ''
+    Description: Optional - ID of the Snapshot Manager metadata volume snapshot. !!!
+      Please note if you are upgrading from standalone deployments of NetBackup Snapshot
+      Manager !!! Post upgrade, Snapshot Manager only works in conjunction with Veritas
+      NetBackup. You must use NetBackup to manage Snapshot Manager and protect new
+      and existing workloads. Veritas recommends that you back up the contents of
+      the '/cloudpoint' directory before you proceed with the upgrade. If you wish
+      to migrate your existing protection plans and be able to restore your existing
+      snapshots, you must use the command line-based Snapshot Manager migration utility,
+      after the upgrade is successful. Refer to the NetBackup Snapshot Manager Install
+      and Upgrade Guide for details. To get more help with the standalone Snapshot
+      Manager upgrade and usage of the migration utility, contact Veritas Technical
+      Support either by opening a support case at https://www.veritas.com/support/en_US
+      or by calling the appropriate number for your region at https://www.veritas.com/content/support/en_US/contact-us.
+    Type: String
+  NBSMSubnet:
+    Default: ''
+    Description: Select ID of existing subnet in your VPC where Snapshot Manager instance
+      will be deployed
+    Type: AWS::EC2::Subnet::Id
+  NBSMVPC:
+    Default: ''
+    Description: Select ID of existing VPC where Snapshot Manager instance will be
+      deployed
+    Type: AWS::EC2::VPC::Id
+  InboundAccessCIDR:
+    Description: Optional - CIDR to allow inbound access to Snapshot Manager instance
+    Type: String
+    ConstraintDescription: 'Must be a valid source IP range Eg: 0.0.0.0/0'
+  NBSMVPCDomainName:
+    Type: String
+    Description: Domain name must correspond to an existing Route53 Hosted Zone associated
+      with this VPC, or it must be a new domain for which a Hosted Zone will be created
+      with the deployment
+  KeyName:
+    Description: Select the EC2 key pair that will be used to enable SSH access for
+      the Snapshot Manager instance
+    Type: AWS::EC2::KeyPair::KeyName
+    AllowedPattern: '[-_. a-zA-Z0-9]*'
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+  NBSMAvailabilityZone:
+    Description: Name of an existing EC2 Availability Zone in which the Snapshot Manager
+      instance will be created
+    Type: AWS::EC2::AvailabilityZone::Name
+  NBSMElasticIP:
+    Description: Optional - Elastic IP to be assigned to Snapshot Manager instance
+    Type: String
+  NBSMHttpProxy:
+    Description: Optional - HttpProxy environment variable to configure Snapshot Manager
+      with proxy server
+    Type: String
+  NBSMHttpsProxy:
+    Description: Optional - HttpsProxy environment variable to configure Snapshot
+      Manager with proxy server
+    Type: String
+  NBSMNoProxy:
+    Description: Optional - NoProxy environment variable to configure Snapshot Manager
+      with proxy server
+    Type: String
+  NBSMVolumeID:
+    Default: ''
+    Description: Optional - ID of an existing EBS volume. !!! Please note if you are
+      upgrading from standalone deployments of NetBackup Snapshot Manager !!! Post
+      upgrade, Snapshot Manager only works in conjunction with Veritas NetBackup.
+      You must use NetBackup to manage Snapshot Manager and protect new and existing
+      workloads. Veritas recommends that you back up the contents of the '/cloudpoint'
+      directory before you proceed with the upgrade. If you wish to migrate your existing
+      protection plans and be able to restore your existing snapshots, you must use
+      the command line-based Snapshot Manager migration utility, after the upgrade
+      is successful. Refer to the NetBackup Snapshot Manager Install and Upgrade Guide
+      for details. To get more help with the standalone Snapshot Manager upgrade and
+      usage of the migration utility, contact Veritas Technical Support either by
+      opening a support case at https://www.veritas.com/support/en_US or by calling
+      the appropriate number for your region at https://www.veritas.com/content/support/en_US/contact-us.
+    Type: String
+  NBSMRole:
+    Description: Optional - Name of the role to be attached to the Snapshot Manager
+      instance (A new IAM Role will be created if this field is left empty)
+    Type: String
+  NBSMServerName:
+    Description: Snapshot Manager Server Name
+    AllowedPattern: ^[a-z][.,a-z,0-9,-]*$
+    ConstraintDescription: Must be a valid name with a minimum length of 8 characters
+      and  it should not start with minus sign (-), dot (.) and a number.
+    MinLength: 8
+    Type: String
+  NBSMPort:
+    Default: '443'
+    Description: Select the port to use for Snapshot Manager configuration.
+    Type: String
+    AllowedPattern: ^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$
+  SNSTopicARN:
+    Description: Optional - ARN of the SNS Topic to get notifications on any update
+      in the Snapshot Manager Auto Scaling Group (Leave this field blank if notifications
+      are not required)
+    Type: String
+  CMKID:
+    Default: ''
+    Description: Optional - ID of the customer master key using which KMS would be
+      configured with Snapshot Manager (Leave this field blank if KMS need not be
+      configured)
+    Type: String
+  CMKRegion:
+    Default: ''
+    Description: Optional - Region of the CMK if CMK ID is specified (Leave this field
+      blank if region is same as where Snapshot Manager is being deployed)
+    Type: String
+  NBServer:
+    Default: ''
+    Description: NetBackup server to which Snapshot Manager would be registered. Make
+      sure the NBU is reachable.
+    Type: String
+  NBAPIKey:
+    Default: ''
+    Description: NetBackup API key to be used while Snapshot Manager configuration
+      and registration
+    Type: String
+    NoEcho: 'true'
+Conditions:
+  ExistingVol: !Not [!Equals ['', !Ref 'NBSMVolumeID']]
+  NotExistingVol: !Equals ['', !Ref 'NBSMVolumeID']
+  NotExistingRole: !Equals ['', !Ref 'NBSMRole']
+  ExistingSnap: !Not [!Equals ['', !Ref 'NBSMVolumeSnapshot']]
+  NotExistingSnap: !Equals ['', !Ref 'NBSMVolumeSnapshot']
+  FreshCondition: !And [!Condition 'NotExistingVol', !Condition 'NotExistingSnap']
+  UseSNSTopicARN: !Not [!Equals ['', !Ref 'SNSTopicARN']]
+  ASGCondition: !Not [!Or [!Equals [eu-west-3, !Ref 'AWS::Region'], !Equals [eu-north-1,
+        !Ref 'AWS::Region'], !Equals [sa-east-1, !Ref 'AWS::Region']]]
+  ASGandSNSCondition: !And [!Condition 'UseSNSTopicARN', !Condition 'ASGCondition']
+  ASGandSNSNotCondition: !And [!Condition 'ASGCondition', !Not [!Condition 'UseSNSTopicARN']]
+  AssignElasticIP: !Not [!Equals ['', !Ref 'NBSMElasticIP']]
+Resources:
+  myWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Properties: {}
+  CloudPointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This is the Security group for Snapshot Manager
+      VpcId: !Ref 'NBSMVPC'
+      SecurityGroupEgress:
+      - IpProtocol: '-1'
+        CidrIp: 0.0.0.0/0
+  MountPoint:
+    Type: AWS::EC2::VolumeAttachment
+    Condition: ExistingVol
+    Properties:
+      InstanceId: !Ref 'CloudPointInstance'
+      VolumeId: !Ref 'NBSMVolumeID'
+      Device: /dev/sdf
+  NewVolume:
+    Type: AWS::EC2::Volume
+    Condition: FreshCondition
+    Properties:
+      Size: !Ref 'NBSMVolumeSize'
+      AvailabilityZone: !Ref 'NBSMAvailabilityZone'
+      VolumeType: gp2
+      Encrypted: 'true'
+  NewVolumeFromSnapshot:
+    Type: AWS::EC2::Volume
+    Condition: ExistingSnap
+    Properties:
+      Size: !Ref 'NBSMVolumeSize'
+      AvailabilityZone: !Ref 'NBSMAvailabilityZone'
+      VolumeType: gp2
+      SnapshotId: !Ref 'NBSMVolumeSnapshot'
+      Encrypted: 'true'
+  MountPointNew:
+    Type: AWS::EC2::VolumeAttachment
+    Condition: FreshCondition
+    Properties:
+      InstanceId: !Ref 'CloudPointInstance'
+      VolumeId: !Ref 'NewVolume'
+      Device: /dev/sdf
+  MountPointNewSnap:
+    Type: AWS::EC2::VolumeAttachment
+    Condition: ExistingSnap
+    Properties:
+      InstanceId: !Ref 'CloudPointInstance'
+      VolumeId: !Ref 'NewVolumeFromSnapshot'
+      Device: /dev/sdf
+  CreatedNBSMRole:
+    Type: AWS::IAM::Role
+    Condition: NotExistingRole
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Sid: EC2AutoScaling
+            Effect: Allow
+            Action:
+            - autoscaling:UpdateAutoScalingGroup
+            - autoscaling:AttachInstances
+            Resource:
+            - '*'
+          - Sid: KMS
+            Effect: Allow
+            Action:
+            - kms:ListKeys
+            - kms:Encrypt
+            - kms:Decrypt
+            - kms:ReEncryptTo
+            - kms:DescribeKey
+            - kms:ListAliases
+            - kms:GenerateDataKey
+            - kms:GenerateDataKeyWithoutPlaintext
+            - kms:ReEncryptFrom
+            - kms:CreateGrant
+            Resource:
+            - '*'
+          - Sid: RDSBackup
+            Effect: Allow
+            Action:
+            - rds:DescribeDBSnapshots
+            - rds:DescribeDBClusters
+            - rds:DescribeDBClusterSnapshots
+            - rds:DeleteDBSnapshot
+            - rds:CreateDBSnapshot
+            - rds:CreateDBClusterSnapshot
+            - rds:ModifyDBSnapshotAttribute
+            - rds:DescribeDBSubnetGroups
+            - rds:DescribeDBInstances
+            - rds:CopyDBSnapshot
+            - rds:CopyDBClusterSnapshot
+            - rds:DescribeDBSnapshotAttributes
+            - rds:DeleteDBClusterSnapshot
+            - rds:ListTagsForResource
+            - rds:AddTagsToResource
+            - rds:DescribeDBClusterParameterGroups
+            Resource:
+            - '*'
+          - Sid: RDSRecovery
+            Effect: Allow
+            Action:
+            - rds:ModifyDBInstance
+            - rds:ModifyDBClusterSnapshotAttribute
+            - rds:RestoreDBInstanceFromDBSnapshot
+            - rds:ModifyDBCluster
+            - rds:RestoreDBClusterFromSnapshot
+            - rds:CreateDBInstance
+            - rds:RestoreDBClusterToPointInTime
+            - rds:CreateDBSecurityGroup
+            - rds:CreateDBCluster
+            - rds:RestoreDBInstanceToPointInTime
+            Resource:
+            - '*'
+          - Sid: EC2Backup
+            Effect: Allow
+            Action:
+            - sts:GetCallerIdentity
+            - ec2:CreateSnapshot
+            - ec2:DescribeInstances
+            - ec2:DescribeInstanceStatus
+            - ec2:ModifySnapshotAttribute
+            - ec2:ModifyInstanceMetadataOptions
+            - ec2:CreateImage
+            - ec2:CopyImage
+            - ec2:CopySnapshot
+            - ec2:DescribeSnapshots
+            - ec2:DescribeVolumeStatus
+            - ec2:DescribeVolumes
+            - ec2:DescribeInstanceTypes
+            - ec2:RegisterImage
+            - ec2:DescribeVolumeAttribute
+            - ec2:DescribeSubnets
+            - ec2:DescribeVpcs
+            - ec2:DeregisterImage
+            - ec2:DeleteSnapshot
+            - ec2:DescribeInstanceAttribute
+            - ec2:DescribeRegions
+            - ec2:ModifyImageAttribute
+            - ec2:DescribeAvailabilityZones
+            - ec2:ResetSnapshotAttribute
+            - ec2:DescribeHosts
+            - ec2:DescribeImages
+            - ec2:AssociateAddress
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DescribeSecurityGroups
+            - ec2:AuthorizeSecurityGroupEgress
+            - ec2:AuthorizeSecurityGroupIngress
+            - ec2:CreateSnapshots
+            - ec2:GetEbsEncryptionByDefault
+            - ec2:DescribeKeyPairs
+            - secretsmanager:GetResourcePolicy
+            - secretsmanager:GetSecretValue
+            - secretsmanager:DescribeSecret
+            - secretsmanager:RestoreSecret
+            - secretsmanager:PutSecretValue
+            - secretsmanager:DeleteSecret
+            - secretsmanager:UpdateSecret
+            - ssm:CreateDocument
+            - ssm:DescribeDocument
+            - ssm:DescribeInstanceInformation
+            - ssm:GetCommandInvocation
+            - ssm:SendCommand
+            - ssm:UpdateDocumentDefaultVersion
+            - ssm:UpdateDocument
+            Resource:
+            - '*'
+          - Sid: EC2Recovery
+            Effect: Allow
+            Action:
+            - ec2:RunInstances
+            - ec2:AttachNetworkInterface
+            - ec2:DetachVolume
+            - ec2:AttachVolume
+            - ec2:DeleteTags
+            - ec2:CreateTags
+            - ec2:StartInstances
+            - ec2:StopInstances
+            - ec2:TerminateInstances
+            - ec2:CreateVolume
+            - ec2:DeleteVolume
+            - ec2:DescribeIamInstanceProfileAssociations
+            - ec2:AssociateIamInstanceProfile
+            - ec2:DescribeInstanceTypeOfferings
+            Resource:
+            - '*'
+          - Sid: SNS
+            Effect: Allow
+            Action:
+            - sns:Publish
+            - sns:GetTopicAttributes
+            Resource:
+            - '*'
+          - Sid: IAM
+            Effect: Allow
+            Action:
+            - iam:SimulatePrincipalPolicy
+            - iam:ListAccountAliases
+            Resource:
+            - '*'
+          - Sid: EBS
+            Effect: Allow
+            Action:
+            - ebs:ListSnapshotBlocks
+            - ebs:StartSnapshot
+            - ebs:CompleteSnapshot
+            - ebs:PutSnapshotBlock
+            - ebs:ListChangedBlocks
+            - ebs:GetSnapshotBlock
+            Resource:
+            - '*'
+          - Sid: Route53
+            Effect: Allow
+            Action:
+            - route53:CreateHostedZone
+            - route53:ListHostedZones
+            - route53:GetHostedZone
+            - route53:ListResourceRecordSets
+            - route53:ChangeResourceRecordSets
+            - route53:ListResourceRecordSets
+            - route53:ListHostedZonesByName
+            Resource:
+            - '*'
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - !If [NotExistingRole, !Ref 'CreatedNBSMRole', !Ref 'NBSMRole']
+  CloudPointAutoScalingWithSNS:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Condition: ASGandSNSCondition
+    Properties:
+      NotificationConfigurations:
+      - NotificationTypes:
+        - autoscaling:EC2_INSTANCE_LAUNCH
+        - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+        - autoscaling:EC2_INSTANCE_TERMINATE
+        - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+        - autoscaling:TEST_NOTIFICATION
+        TopicARN: !Ref 'SNSTopicARN'
+      VPCZoneIdentifier:
+      - !Ref 'NBSMSubnet'
+      LaunchTemplate:
+        LaunchTemplateId: !Ref CloudPointLaunchTemplate
+        Version: !GetAtt CloudPointLaunchTemplate.LatestVersionNumber
+      MaxSize: '1'
+      MinSize: '0'
+      AvailabilityZones:
+      - !Ref 'NBSMAvailabilityZone'
+  CloudPointAutoScaling:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Condition: ASGandSNSNotCondition
+    Properties:
+      VPCZoneIdentifier:
+      - !Ref 'NBSMSubnet'
+      LaunchTemplate:
+        LaunchTemplateId: !Ref CloudPointLaunchTemplate
+        Version: !GetAtt CloudPointLaunchTemplate.LatestVersionNumber
+      MaxSize: '1'
+      MinSize: '0'
+      AvailabilityZones:
+      - !Ref 'NBSMAvailabilityZone'
+  CloudPointLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Condition: ASGCondition
+    Properties:
+      LaunchTemplateName: CloudPointLaunchTemplate11
+      LaunchTemplateData:
+        IamInstanceProfile: 
+          Name: !Ref 'InstanceProfile'
+        ImageId: !FindInMap [AWSAMIRegionMap, !Ref 'AWS::Region', AMI]
+        InstanceType: !Ref 'NBSMInstanceType'
+        KeyName: !Ref 'KeyName'
+        SecurityGroupIds:
+        - !GetAtt CloudPointSecurityGroup.GroupId
+        UserData: !Base64
+          Fn::Join:
+          - ''
+          - - '#!/usr/bin/python3
+
+              '
+            - 'import subprocess
+
+              '
+            - 'import time
+
+              '
+            - 'import os
+
+              '
+            - 'import json
+
+              '
+            - 'import sys
+
+              '
+            - '
+
+              import boto3
+
+
+              '
+            - '
+
+
+              '
+            - 'def subprocess_output(cmd):
+
+              '
+            - '    p = subprocess.Popen(cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE,
+              shell=True)
+
+              '
+            - '    output = p.communicate()[0].strip()
+
+              '
+            - '    return str(output, ''utf-8'')
+
+              '
+            - '
+
+              '
+            - cp_http_proxy = "
+            - !Ref 'NBSMHttpProxy'
+            - '"
+
+              '
+            - cp_https_proxy = "
+            - !Ref 'NBSMHttpsProxy'
+            - '"
+
+              '
+            - cp_no_proxy = "
+            - !Ref 'NBSMNoProxy'
+            - '"
+
+              '
+            - cp_vpc_domain = "
+            - !Ref 'NBSMVPCDomainName'
+            - '"
+
+              '
+            - hosts = "
+            - !Ref 'NBSMServerName'
+            - '"
+
+              '
+            - 'cmd = "curl -X PUT \"http://169.254.169.254/latest/api/token\" -H \"X-aws-ec2-metadata-token-ttl-seconds:
+              21600\""'
+            - '
+
+              '
+            - token = subprocess_output(cmd)
+            - '
+
+              '
+            - "if cp_http_proxy: \n"
+            - '    cp_proxy = True
+
+              '
+            - 'else:
+
+              '
+            - '    cp_proxy = False'
+            - '
+
+              cmd = "echo \"cp_proxy={}\" >> /tmp/install_cp_env".format(cp_proxy)
+
+              '
+            - 'os.system(cmd)
+
+              '
+            - "if cp_proxy: \n"
+            - '    proxy_conf = """export http_proxy={}\nexport https_proxy={}\nexport
+              no_proxy={}""".format(cp_http_proxy, cp_https_proxy, cp_no_proxy)
+
+              '
+            - '    proxy_env = """cp_http_proxy={}\ncp_https_proxy={}\ncp_no_proxy={}""".format(cp_http_proxy,
+              cp_https_proxy, cp_no_proxy)
+
+              '
+            - '    with open("/etc/profile.d/proxy.sh", "a+") as f_proxy:
+
+              '
+            - '        f_proxy.write(proxy_conf)
+
+              '
+            - '    with open("/tmp/install_cp_env", "a+") as f_env:
+
+              '
+            - '        f_env.write(proxy_env)
+
+              '
+            - '    cmds = ["cp /etc/sudoers /tmp/sudoers.new", "chmod 640 /tmp/sudoers.new",
+              "echo \"Defaults env_keep += \\\"http_proxy https_proxy no_proxy\\\"\"
+              >> /tmp/sudoers.new" ,"visudo -c -f /tmp/sudoers.new && /bin/cp /tmp/sudoers.new
+              /etc/sudoers" ]
+
+              '
+            - '    for cmd in cmds:
+
+              '
+            - '        os.system(cmd)
+
+              '
+            - 'time.sleep(60)
+
+              '
+            - 'cmd = f"curl -H \"X-aws-ec2-metadata-token: {token}\" http://169.254.169.254/latest/meta-data/instance-id"'
+            - '
+
+              '
+            - 'str_id = subprocess_output(cmd)
+
+              '
+            - 'print("Instance ID = ", str_id)
+
+
+              '
+            - i_type = "
+            - !Ref 'NBSMInstanceType'
+            - '"
+
+              '
+            - policy_tag = "
+            - !Ref 'AWS::StackName'
+            - '"
+
+              '
+            - sns_arn = "
+            - !Ref 'SNSTopicARN'
+            - '"
+
+              '
+            - elastic_ip = "
+            - !Ref 'NBSMElasticIP'
+            - '"
+
+              '
+            - 'if i_type.startswith(("t2", "m4")):
+
+              '
+            - '    mnt = "/dev/xvdf"
+
+              '
+            - 'if i_type.startswith(("t3", "m5")):
+
+              '
+            - '    mnt = "/dev/nvme1n1"
+
+              '
+            - "if cp_proxy: \n"
+            - '    env = {"http_proxy": cp_http_proxy, "https_proxy": cp_http_proxy,
+              "no_proxy": cp_no_proxy}
+
+              '
+            - '    os.environ.update(env)
+
+              '
+            - os_type = "RHEL9"
+            - '
+
+              '
+            - 'if os_type == "RHEL9" or os_type == "RHEL8":
+
+              '
+            - '    utility = "podman"
+
+              '
+            - 'else:
+
+              '
+            - '    utility = "docker"
+
+              '
+            - sessn = boto3.session.Session(region_name = '
+            - !Ref 'AWS::Region'
+            - ''')
+
+              '
+            - 'client = sessn.client(''ec2'')
+
+
+              '
+            - 'cmd = f"curl -H \"X-aws-ec2-metadata-token: {token}\" http://169.254.169.254/latest/meta-data/placement/availability-zone"'
+            - '
+
+              '
+            - 'avbl_zone = subprocess_output(cmd)
+
+              '
+            - 'print("Availability Zone = ", avbl_zone)
+
+
+              '
+            - 'if elastic_ip:
+
+              '
+            - '    response = client.associate_address(InstanceId=str_id, PublicIp=elastic_ip,
+              AllowReassociation=True)
+
+              '
+            - '    time.sleep(60)
+
+              '
+            - 'cmd = f"curl -H \"X-aws-ec2-metadata-token: {token}\" http://169.254.169.254/latest/meta-data/local-ipv4"'
+            - '
+
+              '
+            - 'host_ip = subprocess_output(cmd)
+
+              '
+            - 'client.modify_instance_metadata_options(InstanceId=str_id, HttpPutResponseHopLimit=2)
+
+              '
+            - 'if cp_vpc_domain and hosts:
+
+              '
+            - '    #check if hosted zone exist or not
+
+              '
+            - '    r53 = boto3.client(''route53'')
+
+              '
+            - '    zones = r53.list_hosted_zones_by_name(DNSName=cp_vpc_domain)
+
+              '
+            - '    if zones and len(zones[''HostedZones'']) > 0:
+
+              '
+            - '        zone_id = zones[''HostedZones''][0][''Id'']
+
+              '
+            - '        vm_name_fqdn = hosts + "." + cp_vpc_domain
+
+              '
+            - '        response = r53.change_resource_record_sets(
+
+              '
+            - '                       HostedZoneId=zone_id,
+
+              '
+            - '                       ChangeBatch={
+
+              '
+            - '                             ''Comment'': ''Snapshot Manager CFT DNS
+              update'',
+
+              '
+            - '                             ''Changes'': [
+
+              '
+            - '                                  {
+
+              '
+            - '                                    ''Action'': ''UPSERT'',
+
+              '
+            - '                                    ''ResourceRecordSet'':
+
+              '
+            - '                                      {
+
+              '
+            - '                                        ''Name'': vm_name_fqdn,
+
+              '
+            - '                                        ''Type'': ''A'',
+
+              '
+            - '                                        ''TTL'': 60,
+
+              '
+            - '                                        ''ResourceRecords'': [
+
+              '
+            - '                                          {
+
+              '
+            - '                                            ''Value'': host_ip
+
+              '
+            - '                                          }],
+
+              '
+            - '                                        }
+
+              '
+            - '                                  }]})
+
+              '
+            - '        #change hostname of the machine
+
+              '
+            - '        cmd = "hostnamectl set-hostname {}".format(vm_name_fqdn)
+
+              '
+            - '        os.system(cmd)
+
+              '
+            - '
+
+              '
+            - 'print("Instance IP  = ", host_ip)
+
+
+              '
+            - 'response = client.describe_snapshots(Filters=[{''Name'': ''tag:Protection'',
+              ''Values'': [policy_tag]}])
+
+              '
+            - "if not response[\"Snapshots\"]: \n"
+            - '    #publish to SNS
+
+              '
+            - '    if sns_arn:
+
+              '
+            - '        sns_region = sns_arn.split(":")[3]
+
+              '
+            - '        sns_client = boto3.client(''sns'', region_name=sns_region)
+
+              '
+            - '        response = sns_client.publish(TopicArn=sns_arn,
+
+              '
+            - '                                      Subject=''Snapshot Manager recovery
+              failed'',
+
+              '
+            - '                                      Message=''Unable to recover the
+              Snapshot Manager configuration as there are no Snapshot Manager metadata
+              snapshots available. You may have to install and configure a new Snapshot
+              Manager instance again.'')
+
+              '
+            - '    sys.exit(0)
+
+              '
+            - 'snapshots = sorted(response["Snapshots"], key=lambda k: k["StartTime"],
+              reverse=True)[0]
+
+              '
+            - 'snap_id = snapshots["SnapshotId"]
+
+              '
+            - 'print("Snapshot ID = ", snap_id)
+
+
+              '
+            - 'volume = client.create_volume(SnapshotId=snap_id, VolumeType=''gp2'',
+              AvailabilityZone=avbl_zone)
+
+              '
+            - 'vol_id = volume["VolumeId"]
+
+              '
+            - 'print("Volume ID = ", vol_id)
+
+
+              '
+            - 'while client.describe_volumes(VolumeIds=[vol_id])["Volumes"][0]["State"]
+              != "available":
+
+              '
+            - '    print("Volume is getting created")
+
+              '
+            - '    time.sleep(2)
+
+              '
+            - '
+
+              '
+            - 'attach = client.attach_volume(Device="/dev/sdf", InstanceId=str_id, VolumeId=vol_id)
+
+              '
+            - 'while client.describe_volumes(VolumeIds=[vol_id])["Volumes"][0]["State"]
+              != "in-use":
+
+              '
+            - '    print("Volume is getting attached")
+
+              '
+            - '    time.sleep(2)
+
+              '
+            - '
+
+              while not os.path.exists(mnt):
+
+              '
+            - '    print("Waiting for device to get created")
+
+              '
+            - '    time.sleep(2)
+
+              '
+            - 'if not os.path.exists("/cloudpoint"):
+
+              '
+            - '    os.makedirs("/cloudpoint")
+
+              '
+            - 'cmd = "/sbin/blkid -o value -s UUID {mnt}".format(mnt=mnt)
+
+              '
+            - 'uuid = subprocess_output(cmd)
+
+              '
+            - "entry = \"UUID={uuid}\t{mount_point}\t{fs_device}\tdefaults\t0 0\".format(uuid=uuid,\
+              \ mount_point='/cloudpoint', fs_device='ext4')\n"
+            - 'cmd = "/bin/cp -f /etc/fstab /etc/fstab.orig.$$"
+
+              '
+            - 'os.system(cmd)
+
+              '
+            - 'with open("/etc/fstab", "a") as fh:
+
+              '
+            - '    fh.write(entry)
+
+              '
+            - '
+
+              cmd = "mount {} /cloudpoint".format(mnt)
+
+              '
+            - 'os.system(cmd)
+
+              '
+            - 'cmd = "PRIVILEGED=true flexsnap_configure install"
+
+              '
+            - 'if cp_proxy:
+
+              '
+            - '    cmd = "{} --no-proxy {} --http-proxy {} --https-proxy {}"'
+            - '    .format(cmd, cp_no_proxy, cp_http_proxy, cp_https_proxy)
+
+              '
+            - 'os.system(cmd)
+
+
+              '
+            - 'status = "Down"
+
+              '
+            - 'while status != "Up":
+
+              '
+            - '    cmd = utility + " ps --filter ''name=flexsnap-nginx'' --format {{.Status}}
+              | awk ''{print $1}''"
+
+              '
+            - '    status = subprocess_output(cmd)
+
+              '
+            - '    time.sleep(5)
+
+              '
+            - '    print("Waiting for Snapshot Manager to be up.")
+
+              '
+            - '
+
+              '
+            - 'health_status = None
+
+              '
+            - 'while health_status != "healthy":
+
+              '
+            - '    cmd = utility + " inspect --format=''{{json .State.Health}}'' flexsnap-postgresql"
+
+              '
+            - '    output = subprocess_output(cmd)
+
+              '
+            - '    try:
+
+              '
+            - '        json_output = json.loads(output)
+
+              '
+            - '        health_status = json_output["Status"]
+
+              '
+            - '    except Exception as e:
+
+              '
+            - '        health_status = None
+
+              '
+            - '    print("health_status  = ", health_status
+
+              )
+
+              '
+            - '    time.sleep(2)
+
+              '
+            - "time.sleep(120) \n"
+  myWaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref 'myWaitHandle'
+      Timeout: '1800'
+  errorWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  errorWaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref 'errorWaitHandle'
+      Timeout: '1800'
+  CloudPointInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          ConfigCloudPointInstance:
+          - cfn_base
+          - Configure
+        cfn_base:
+          files:
+            /tmp/update_securitygroup:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', 'export PATH=/usr/local/bin:$PATH
+
+                    ', subnetid=, !Ref 'NBSMSubnet', '
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ', groupid=, !GetAtt [CloudPointSecurityGroup, GroupId], '
+
+                    ', port=, !Ref 'NBSMPort', '
+
+                    ', cidrinput=", !Ref 'InboundAccessCIDR', '"', '
+
+                    ', echo $cidrinput, '
+
+                    ', 'cidrblock=$(aws ec2 describe-subnets --region=$region --filters ',
+                  ' "Name=subnet-id,Values="$subnetid"" --query "Subnets[*].{CIDR:CidrBlock}"  ',
+                  " |  python3 -c \"import sys, json; tmp = json.load(sys.stdin);\
+                    \ print(tmp[0]['CIDR'])\") \n", 'result=$(aws ec2 authorize-security-group-ingress
+                    --group-id=$groupid ', " --protocol tcp --port 5671 --cidr=$cidrblock\
+                    \ --region=$region) \n", 'result=$(aws ec2 authorize-security-group-ingress
+                    --group-id=$groupid ', " --protocol tcp --port $port --cidr=$cidrblock\
+                    \ --region=$region) \n", "CIDR_NO_WHITESPACE=\"$(echo -e \"${cidrinput}\"\
+                    \ | tr -d '[:space:]')\" \n", "IFS=',' \n", "REGEX='(((25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\\\
+                    .){3}(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?))(/([8-9]|[1-2][0-9]|3[0-2]))([^0-9.]|$)'\
+                    \ \n", "read -ra ADDR <<< \"$CIDR_NO_WHITESPACE\" \n", "for cidr\
+                    \ in \"${ADDR[@]}\"; do \n", "    if [ $cidr == '0.0.0.0/0' ]\
+                    \ || echo $cidr | grep -qP \"$REGEX\" \n", "    then \n", "  \
+                    \    echo \"$cidr VALID!\" \n", "      if [ $cidr != $cidrblock\
+                    \ ] \n", "      then \n", '        result=$(aws ec2 authorize-security-group-ingress
+                    --group-id=$groupid  ', "        --protocol tcp --port $port --cidr=$cidr\
+                    \ --region=$region) \n", "      else \n", "        echo \"$cidr\
+                    \ already added!\" \n", "      fi \n", "    else \n", "      \
+                    \ echo \"$cidr NOT VALID!\" \n", "    fi \n", "done \n", '
+
+                    ']]
+            /etc/cfn/cfn-hup.conf:
+              content: !Join ['', ['[main]
+
+                    ', stack=, !Ref 'AWS::StackId', '
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ']]
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Join ['', ['[cfn-auto-reloader-hook]
+
+                    ', 'triggers=post.update
+
+                    ', 'path=Resources.CloudPointInstance.Metadata.AWS::CloudFormation::Init
+
+                    ', action=/opt/aws/bin/cfn-init, ' --stack ', !Ref 'AWS::StackName',
+                  ' --resource CloudPointInstance', ' --configsets ConfigCloudPointInstance',
+                  ' --region ', !Ref 'AWS::Region', '
+
+                    ', 'runas=root
+
+                    ']]
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                - /etc/cfn/cfn-hup.conf
+                - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        Configure:
+          files:
+            /tmp/attach_volume:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', 'export PATH=/usr/local/bin:$PATH
+
+                    ', 'set -e
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ', i_type=, !Ref 'NBSMInstanceType', '
+
+                    ', new_vol=, !If [FreshCondition, 'True', 'False'], '
+
+                    ', existing_vol=, !If [ExistingVol, 'True', 'False'], '
+
+                    ', vol_snap=, !If [ExistingSnap, 'True', 'False'], '
+
+                    ', 'if [ ${new_vol} == True ]; then
+
+                    ', vol_id=, !If [FreshCondition, !Ref 'NewVolume', ''], '
+
+                    ', 'elif [ ${existing_vol} == True ]; then
+
+                    ', vol_id=, !If [ExistingVol, !Ref 'NBSMVolumeID', ''], '
+
+                    ', 'elif [ ${vol_snap} == True ]; then
+
+                    ', vol_id=, !If [ExistingSnap, !Ref 'NewVolumeFromSnapshot', ''],
+                  '
+
+                    ', 'fi
+
+                    ', 'aws ec2 wait volume-in-use --volume-ids ${vol_id} --region
+                    ${region}
+
+                    ', 'vol_id=$(echo ${vol_id} | sed ''s/-//g'')
+
+                    ', 'if [[ $i_type =~ ^t3 || $i_type =~ ^m5 ]]; then
+
+                    ', '    DISK=$(lsblk -p -o name,SERIAL | grep ${vol_id} | cut
+                    -d'' '' -f1)
+
+                    ', 'fi
+
+                    ', 'if [[ $i_type =~ ^t2 || $i_type =~ ^m4 ]]; then
+
+                    ', '    DISK="/dev/xvdf"
+
+                    ', 'fi
+
+                    ', 'FILESYSTEM=$1
+
+                    ', '# Helper function
+
+                    ', 'function error_exit {
+
+                    ', '     message="NetBackup Snapshot Manager installation failed.
+                    Reason $1"
+
+                    ', '     CFN_SIG=`which cfn-signal`
+
+                    ', '     $CFN_SIG -e 1 -r "$message" ''', !Ref 'errorWaitHandle',
+                  '''
+
+                    ', '     exit 1
+
+                    ', '}
+
+                    ', 'prepare_disk_for_mounting() {
+
+                    ', '    disk=$1
+
+                    ', '    if [ -z ${disk} ]; then
+
+                    ', '        echo "prepare_disk_for_mounting: no disk provided"
+                    >&2
+
+                    ', '        error_exit "prepare_disk_for_mounting: no disk provided
+                    "
+
+                    ', '    fi
+
+                    ', '    if [ ! -b ${disk} ]; then
+
+                    ', '        echo "prepare_disk_for_mounting: ${disk} is not a
+                    block device" >&2
+
+                    ', '        error_exit "prepare_disk_for_mounting:  ''${disk}''
+                    is not a block device  "
+
+                    ', '    fi
+
+                    ', '    fs=`/sbin/blkid -o value -s TYPE ${disk}`
+
+                    ', '    if [ $? -eq 0 ]; then
+
+                    ', '        echo "prepare_disk_for_mounting: filesystem type ${fs}
+                    already created on ${disk}" >&2
+
+                    ', '    else
+
+                    ', '        fs="ext4"
+
+                    ', '        echo "Creating ext4 filesystem on disk ${disk}..."
+                    >&2
+
+                    ', '        sleep 5
+
+                    ', '        /sbin/mkfs.ext4 ${disk} >/dev/null 2>&1
+
+                    ', '        if [ $? -ne 0 ]; then
+
+                    ', '            echo "prepare_disk_for_mounting: failure creating
+                    ext4 filesystem on ${disk}" >&2
+
+                    ', '            error_exit "prepare_disk_for_mounting:  failure
+                    creating ext4 filesystem on ''${disk}'' "
+
+                    ', '        fi
+
+                    ', '    fi
+
+
+                    ', '    echo ${fs}
+
+                    ', '    return 0
+
+                    ', '}
+
+                    ', 'mount_filesystem() {
+
+                    ', '    partition=$1
+
+                    ', '    fs_device=$2
+
+                    ', '    mount_point=$3
+
+                    ', '    if [[ -z ${partition} || -z ${mount_point} || -z ${fs_device}
+                    ]]; then
+
+                    ', '        echo "mount_filesystem: missing argument(s)" >&2
+
+                    ', '        error_exit "mount_filesystem: missing argument(s)
+                    "
+
+                    ', '    fi
+
+                    ', '    uuid=`/sbin/blkid -o value -s UUID ${partition}`
+
+                    ', '    if [[ ! -d ${mount_point} ]]; then
+
+                    ', '        echo "Creating mount-point ${mount_point}" >&2
+
+                    ', '        /bin/mkdir -p ${mount_point}
+
+                    ', '    fi
+
+                    ', '    /bin/cp -f /etc/fstab /etc/fstab.orig.$$
+
+                    ', '    echo "Adding new mount ${partition} on ${mount_point}
+                    to /etc/fstab" >&2
+
+                    ', "    echo -e \"UUID=${uuid}\t${mount_point}\t${fs_device}\t\
+                    defaults\t0 0\" >> /etc/fstab\n", '    echo "Mounting ${partition}
+                    to ${mount_point}" >&2
+
+                    ', '    mount "${mount_point}"
+
+                    ', '    if [ $? -ne 0 ]; then
+
+                    ', '        echo "mount_filesystem: failure mounting filesystem
+                    ${mount_point}" >&2
+
+                    ', '        error_exit "mount_filesystem: failure mounting filesystem
+                    ''${mount_point}'' "
+
+                    ', '    fi
+
+                    ', '    return 0
+
+                    ', '}
+
+                    ', 'fs_device=$(prepare_disk_for_mounting ${DISK})
+
+                    ', 'if [[ $? -ne 0 ]]; then
+
+                    ', '    echo "ERROR: failure preparing disk ''${DISK}'' for usage"
+                    >&2
+
+                    ', '    error_exit "ERROR: failure preparing disk ''${DISK}''
+                    for usage "
+
+                    ', 'fi
+
+                    ', 'mount_filesystem ${DISK} ${fs_device} "${FILESYSTEM}"
+
+                    ', 'if [[ $? -ne 0 ]]; then
+
+                    ', '    echo "ERROR: failure mounting ''${DISK}'' to ''${FILESYSTEM}''"
+                    >&2
+
+                    ', '    error_exit "ERROR: failure mounting ''${DISK}'' to ''${FILESYSTEM}''
+                    "
+
+                    ', fi, '
+
+                    ']]
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/instance_attach:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', 'export PATH=/usr/local/bin:$PATH
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ', 'TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token"
+                    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")', '
+
+                    ', attachtoasg=, !If [ASGCondition, 'True', 'False'], '
+
+                    ', 'asg=""
+
+                    ', 'if [ ${attachtoasg} == True ]; then
+
+                    ', asg=, !If [ASGandSNSCondition, !Ref 'CloudPointAutoScalingWithSNS',
+                    ''], '
+
+                    ', 'if [ -z ${asg} ]; then
+
+                    ', asg=, !If [ASGandSNSNotCondition, !Ref 'CloudPointAutoScaling',
+                    ''], '
+
+                    ', 'fi
+
+                    ', 'fi
+
+                    ', '
+
+                    ', 'if [ ! -z ${asg} ]; then
+
+                    ', '    instance_id=', '$(curl -H "X-aws-ec2-metadata-token: $TOKEN"
+                    http://169.254.169.254/latest/meta-data/instance-id)', '
+
+                    ', '    aws autoscaling attach-instances', ' --instance-ids ',
+                  '${instance_id}', ' --auto-scaling-group-name ', '${asg}', ' --region ',
+                  '${region}', '
+
+                    ', '    aws autoscaling update-auto-scaling-group ', '--auto-scaling-group-name
+                    ${asg} ', --min-size 1, ' --region ', '${region}', '
+
+                    fi']]
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/backup_fluentd_conf:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', 'cp_version_file="/cloudpoint/version"
+
+                    ', 'fluentd_conf_file="/cloudpoint/fluent/fluent.conf"
+
+                    ', 'move_fluentconf=0
+
+                    ', 'cp_old_rel="8.3 9.0"
+
+                    ', 'backup_fluentd_conf=0
+
+                    ', os_type=RHEL9, '
+
+                    ', 'if [ ${os_type} == "RHEL8" ] || [ ${os_type} == "RHEL9" ]
+                    && [ -f ${cp_version_file} ]; then
+
+                    ', '    cp_ver=$(cat ${cp_version_file})
+
+                    ', '    for rel in ${cp_old_rel}; do
+
+                    ', '        echo $cp_ver | grep $rel
+
+                    ', '        if [ $? -eq 0 ]; then
+
+                    ', '            backup_fluentd_conf=1
+
+                    ', '            break
+
+                    ', '        fi
+
+                    ', '    done
+
+                    ', 'fi
+
+                    ', 'if [ ${backup_fluentd_conf} -eq 1 ]; then
+
+                    ', '    echo "Upgrading from ${cp_ver} requires to regenerate
+                    fluent.conf file for Snapshot Manager logging." >&2
+
+                    ', '    echo "If existing fluent.conf has any manual configuration
+                    done for MongoDB, ElasticSearch, Splunk, etc." >&2
+
+                    ', '    echo "then those need to be reconfigured manually after
+                    Snapshot Manager Installation Completes." >&2
+
+                    ', '    echo "Existing fluentd config file will be saved as ${fluentd_conf_file}.bkp
+                    for reference." >&2
+
+                    ', '    mv -f ${fluentd_conf_file} ${fluentd_conf_file}.bkp
+
+                    ', 'fi
+
+                    ']]
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/configure_cp:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', 'export PATH=/usr/local/bin:$PATH
+
+                    ', elastic_ip=, !Ref 'NBSMElasticIP', '
+
+                    ', hosts=, !Ref 'NBSMServerName', '
+
+                    ', policy_tag=, !Ref 'AWS::StackName', '
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ', port=, !Ref 'NBSMPort', '
+
+                    ', cmk_id=, !Ref 'CMKID', '
+
+                    ', cp_vpc_domain=, !Ref 'NBSMVPCDomainName', '
+
+                    ', vpc_id=, !Ref 'NBSMVPC', '
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ', cmk_region=, !Ref 'CMKRegion', '
+
+                    ', os_type=RHEL9, '
+
+                    ', cp_http_proxy=, !Ref 'NBSMHttpProxy', '
+
+                    ', cp_https_proxy=, !Ref 'NBSMHttpsProxy', '
+
+                    ', cp_no_proxy=, !Ref 'NBSMNoProxy', '
+
+                    ', nbu_server=, !Ref 'NBServer', '
+
+                    ', nbu_api_token=, !Ref 'NBAPIKey', '
+
+                    ', 'TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token"
+                    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")', '
+
+                    ', 'if [ ! -z ${cp_http_proxy} ] || [ ! -z ${cp_https_proxy} ];
+                    then
+
+                    ', '    cp_proxy=true
+
+                    ', '    if [ -z ${cp_no_proxy} ]; then
+
+                    ', '        cp_no_proxy="169.254.169.254"
+
+                    ', '    fi
+
+                    ', 'else
+
+                    ', '    cp_proxy=false
+
+                    ', 'fi
+
+                    ', 'function error_exit {
+
+                    ', '     message="NetBackup Snapshot Manager installation failed.
+                    Reason $1"
+
+                    ', '     CFN_SIG=`which cfn-signal`
+
+                    ', '     $CFN_SIG -e 1 -r "$message" ''', !Ref 'errorWaitHandle',
+                  '''
+
+                    ', '     exit 1
+
+                    ', '}
+
+                    ', '
+
+                    ', 'function fetch_security_token {
+
+                    ', 'if [ ! -z ${nbu_server} ] || [ ! -z ${nbu_api_token} ]; then
+
+                    ', '    security_token=""
+
+                    ', '    security_token=$(/usr/bin/curl -k -X POST -H "Content-type:
+                    application/json" ', '-H "Authorization: ${nbu_api_token}" ',
+                  '-d "{\"tokenName\": \"${policy_tag}\", \"reason\": \"ForMarketplace\",
+                    \"allowedCount\": 1, \"validFor\": 86313600}" ', 'https://${nbu_server}/netbackup/security/securitytokens',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''tokenValue''])")
+
+                    ', '    if [ -z ${security_token} ]; then
+
+                    ', '        echo "NetBackup Snapshot Manager install failed, no
+                    security token fetched"
+
+                    ', '        error_exit "No security token fetched"
+
+                    ', '    fi
+
+                    ', '    echo ${security_token}
+
+                    ', 'else
+
+                    ', '    error_exit "NBU server or NBU API token not provided"
+
+                    ', 'fi
+
+                    ', '}
+
+                    ', '
+
+                    ', 'amqps_port=5671
+
+                    ', '# open firewall ports
+
+                    ', 'if [ $os_type == "RHEL8" ] || [ $os_type == "RHEL9" ] || [
+                    $os_type == "RHEL7" ] && [ `systemctl is-active firewalld` = active
+                    ]; then
+
+                    ', '    firewall-cmd --zone=public --add-port=$port/tcp --permanent
+                    >> /dev/null 2>&1
+
+                    ', '    firewall-cmd --zone=public --add-port=$amqps_port/tcp
+                    --permanent >> /dev/null 2>&1
+
+                    ', '    firewall-cmd --reload >> /dev/null 2>&1
+
+                    ', 'elif [ $os_type = "Ubuntu" ] && [ `ufw status | grep "Status"
+                    | awk ''{print $2}''` = active ]; then
+
+                    ', '    ufw allow $port/tcp >> /dev/null 2>&1
+
+                    ', '    ufw allow $amqps_port/tcp >> /dev/null 2>&1
+
+                    ', 'fi
+
+                    ', '
+
+                    ', 'hosted_zone_id=""
+
+                    ', 'vm_name_fqdn=""
+
+                    ', 'local_ip=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4)',
+                  '
+
+                    ', '#create vm_name with fqdn.
+
+                    ', "if [[ ! -z ${cp_vpc_domain}  && ! -z ${hosts} ]]; then \n",
+                  "    vm_name_fqdn=$hosts.$cp_vpc_domain \n", '    echo ${vm_name_fqdn}
+                    > /cloudpoint/cloudpoint_cft_done
+
+                    ', 'fi
+
+                    ', "#check if hosted zone exist or not if not then create \n",
+                  "if [ ! -z ${cp_vpc_domain} ]; then \n", '    hosted_zone_id=$(aws
+                    route53 list-hosted-zones --output text ', ' --query ''HostedZones[?Name==`''$cp_vpc_domain''.`].Id'')
+
+                    ', '
+
+                    ', "    if [ -z $hosted_zone_id ]; then \n", '        unique_str="create-private-dns-stack-$(date
+                    +%F_%H-%M-%S)"
+
+                    ', '        hosted_zone_id=$(aws route53 create-hosted-zone --name
+                    $cp_vpc_domain ', '--caller-reference $unique_str ', '--vpc VPCRegion=$region,VPCId=$vpc_id
+                    | ', 'python3 -c "import sys, json; tmp = json.load(sys.stdin);
+                    print(tmp[''HostedZone''][''Id'']);")
+
+                    ', "        echo  $hosted_zone_id \n", '    fi
+
+                    ', 'fi
+
+                    ', '#Insert / update recordset
+
+                    ', 'if [[ ! -z ${hosted_zone_id} && ! -z ${vm_name_fqdn} ]]; then
+
+                    ', '    TMPFILE=$(mktemp /tmp/temporary-file.XXXXXXXX)
+
+                    ', '    cat > $TMPFILE << EOF
+
+                    ', '    {
+
+                    ', '      "Comment":"CFT Deployment",
+
+                    ', '      "Changes":[
+
+                    ', '         {
+
+                    ', '           "Action":"UPSERT",
+
+                    ', '           "ResourceRecordSet":{
+
+                    ', '           "ResourceRecords":[
+
+                    ', '                {
+
+                    ', '                   "Value":"$local_ip"
+
+                    ', '                }
+
+                    ', '              ],
+
+                    ', '             "Name":"$vm_name_fqdn",
+
+                    ', '             "Type":"A",
+
+                    ', '             "TTL":60
+
+                    ', '            }
+
+                    ', '           }
+
+                    ', '          ]
+
+                    ', '         }
+
+                    ', 'EOF
+
+                    ', '    result=$(aws route53 change-resource-record-sets ', '--hosted-zone-id
+                    $hosted_zone_id ', '--change-batch file://$TMPFILE)
+
+                    ', '    # Run the hostnamectl command and specify the new hostname
+
+                    ', '    hostnamectl set-hostname $vm_name_fqdn
+
+                    ', 'fi
+
+                    ', 'instance_id=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)',
+                  '
+
+                    ', 'aws ec2 modify-instance-metadata-options --instance-id ${instance_id}
+                    --region ${region} --http-put-response-hop-limit 2
+
+                    ', "hostname=$(curl -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/hostname)\
+                    \ \n", "local_hostname=$(curl -H \"X-aws-ec2-metadata-token: $TOKEN\"\
+                    \ http://169.254.169.254/latest/meta-data/local-hostname) \n",
+                  "public_hostname=$(curl -H \"X-aws-ec2-metadata-token: $TOKEN\"\
+                    \ http://169.254.169.254/latest/meta-data/public-hostname) \n",
+                  "public_ip=$(curl -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/public-ipv4)\
+                    \ \n", 'hosts_to_configure=${local_hostname},${local_ip},${hostname}
+
+                    ', 'echo "public_ip: ${public_ip} " >&2
+
+                    ', "if [ ! -z ${public_hostname} ]; then \n", "      hosts_to_configure=${hosts_to_configure},${public_hostname},${public_ip}\
+                    \ \n", 'fi
+
+                    ', 'echo "Hosts input to be configured = ${hosts}" >&2
+
+                    ', 'if [ ! -z ${hosts} ]; then
+
+                    ', '    hosts_to_configure=${hosts},${hosts_to_configure}
+
+                    ', 'fi
+
+                    ', 'if [ ! -z $vm_name_fqdn ]; then
+
+                    ', '    hosts_to_configure=${vm_name_fqdn},${hosts_to_configure}
+
+                    ', 'fi
+
+                    ', 'instance_ip=$(hostname)
+
+                    ', 'hosts_to_configure=$(hostname -f)
+
+                    ', 'echo "Hosts to be configured = ${hosts_to_configure}" >&2
+
+                    ', 'if [ $os_type == "RHEL8" ] || [ $os_type == "RHEL9" ]; then
+
+                    ', '    utility="podman"
+
+                    ', 'else
+
+                    ', '    utility="docker"
+
+                    ', 'fi
+
+                    ', '
+
+                    ', 'command="PRIVILEGED=true flexsnap_configure install --hostnames
+                    ${hosts_to_configure} --port ${port} --primary ${nbu_server}"
+
+                    ', 'if [ ! -f "/cloudpoint/.configured" ]; then
+
+                    ', '    security_token=$(fetch_security_token)
+
+                    ', '    command+=" --token ${security_token}"
+
+                    ', '    if [[ ${cp_proxy} == "true" ]]; then
+
+                    ', '        command+=" --no-proxy ${cp_no_proxy} --http-proxy
+                    ${cp_http_proxy} --https-proxy ${cp_https_proxy}"
+
+                    ', '    fi
+
+                    ', 'else
+
+                    ', '    prev_ver=$(cat /cloudpoint/version)
+
+                    ', '    mongo_image="veritas/flexsnap-mongodb"
+
+                    ', '    current_mongo_image_version=$(${utility} images --format
+                    {{.Repository}}:{{.Tag}} | grep ${mongo_image})
+
+                    ', '    ${utility} tag ${current_mongo_image_version} ${mongo_image}:${prev_ver}
+
+                    ', '    postgresql_image="localhost/veritas/flexsnap-postgresql"
+
+                    ', '    current_postgresql_image_version=${postgresql_image}:10.5.0.0-1036
+
+                    ', '    ${utility} tag ${current_postgresql_image_version} ${postgresql_image}:${prev_ver}
+
+                    ', '    eval $(flexsnap_configure serverinfo)
+
+                    ', '    nbsm_hostname=$(hostname -f)
+
+                    ', '    security_token_required="false"
+
+                    ', '    IFS="," read -ra hosts <<< "hosts_to_configure"
+
+                    ', '    for host in "${hosts[@]}"; do
+
+                    ', '        if [ ${host} == ${nbsm_hostname} ]; then
+
+                    ', '            security_token_required="true"
+
+                    ', '            break
+
+                    ', '        fi
+
+                    ', '    done
+
+                    ', '    IFS="," read -ra NBSM_CERTIFICATE_SAN <<< "${NBSM_CERTIFICATE_SAN}"
+
+                    ', '    if [ ${NBSM_CERTIFICATE_SAN[0]} != ${nbsm_hostname} ];
+                    then
+
+                    ', '        security_token=$(fetch_security_token)
+
+                    ', '        command+=" --token ${security_token}"
+
+                    ', '    fi
+
+                    ', '    if [[ ${cp_proxy} == "true" ]]; then
+
+                    ', '        command+=" --no-proxy ${cp_no_proxy} --http-proxy
+                    ${cp_http_proxy} --https-proxy ${cp_https_proxy}"
+
+                    ', '    fi
+
+                    ', 'fi
+
+                    ', '
+
+                    ', 'echo "command=$command"
+
+                    ', 'eval $command
+
+                    ', 'while [ "$($utility ps --filter ''name=flexsnap-nginx'' --format
+                    {{.Status}} | awk ''{print $1}'')" != "Up" ];
+
+                    ', 'do
+
+                    ', '   echo "Waiting for Snapshot Manager configuration to complete"
+
+                    ', '   sleep 5
+
+                    ', 'done
+
+                    ', 'api_version=$(curl -k -H "Accept:application/json"', ' -X
+                    GET https://${instance_ip}:${port}/cloudpoint/api ', '| python3
+                    -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[-1])")
+
+                    ', 'cp_version=$(/usr/bin/curl -H "Content-Type: application/json"
+                    -X GET ', ' -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/version ',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''Version''])")
+
+                    ', '
+
+                    ', 'if [ ${cp_version} != "" ]; then
+
+                    ', '    echo "Snapshot Manager configuration complete"
+
+                    ', 'fi
+
+                    ', 'sleep 20
+
+                    ', 'if [ -z ${cmk_region} ]; then
+
+                    ', '    cmk_region=${region}
+
+                    ', 'fi
+
+                    ', 'sleep 15
+
+                    ', 'pkpass=$($utility exec flexsnap-nginx cat /var/lib/nginx/keys/server_key_cloudpoint.pass)
+
+                    ', 'ssl_cert="--cert /cloudpoint/rabbitmq/keys/nginx_certificate_cloudpoint.cert.pem
+                    --key /cloudpoint/rabbitmq/keys/server_key_cloudpoint.pem --cacert
+                    /cloudpoint/rabbitmq/keys/server_ca_cloudpoint.pem --pass ${pkpass}"
+
+                    ', 'if [ ! -z ${cmk_id} ]; then
+
+                    ', '    aws_kms=$(/usr/bin/curl -X GET -H ''Content-type: application/json''
+                    -H "Source: cft"', ' ${ssl_cert} -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/kms',
+                  '| python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[0][''platform''])")
+
+                    ', '    echo $aws_kms
+
+                    ', '    if [ -z ${aws_kms} ] || [ ${aws_kms} != "aws" ]; then
+
+                    ', '        task_kms=$(/usr/bin/curl -H  "Content-Type: application/json"
+                    -H "Source: cft"', ' ${ssl_cert} -X POST -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/kms
+                    -d ', '"{\"platform\": \"aws\", \"masterKeyId\": \"$cmk_id\", ',
+                  '\"credentials\": {\"type\": \"iamrole\", \"regionname\": \"$cmk_region\"}}"',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''taskid''])")
+
+                    ', '        while [ `/usr/bin/curl -H  "Content-Type: application/json"
+                    -H "Source: cft"', ' -X GET -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/tasks/${task_kms}',
+                  ' ${ssl_cert} | python3 -c "import sys, json; tmp = json.load(sys.stdin);
+                    print(tmp[''status''])"` != "successful" ];
+
+                    ', '        do
+
+                    ', '            echo "Adding KMS"
+
+                    ', '            sleep 5
+
+                    ', '            if [ `/usr/bin/curl -H  "Content-Type: application/json"
+                    -H "Source: cft"', ' ${ssl_cert} -X GET -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/tasks/${task_kms}',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''status''])"`
+                    == "failed" ]; then
+
+                    ', '                echo "Adding KMS failed"
+
+                    ', '                break
+
+                    ', '            fi
+
+                    ', '        done
+
+                    ', '    else
+
+                    ', '        echo "AWS KMS already configured"
+
+                    ', '    fi
+
+                    ', 'fi
+
+                    ', '
+
+                    ', 'agent_id=""
+
+                    ', 'while  [ -z $agent_id ] || [ ${agent_id} == null ]; do
+
+                    ', '    agent_id=$(/usr/bin/curl -H  "Content-Type: application/json"
+                    -H  "Source: cft"  ${ssl_cert} ', '-X GET -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/agents/?onHost=false ',
+                  '| python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[0][''agentid''])")
+
+                    ', '    echo $agent_id
+
+
+                    ', '    echo "Sleeping for 5"
+
+                    ', '    sleep 5
+
+                    ', 'done
+
+                    ', 'deploy_env=""
+
+                    ', 'while [ -z ${deploy_env} ] || [ ${deploy_env} != "aws" ];
+                    do
+
+                    ', '    deploy_env=$(/usr/bin/curl -H "Content-Type: application/json"
+                    -H "Source: cft"', ' ${ssl_cert} -X GET -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/deploymentSummary',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''deploymentEnvironment''])")
+
+                    ', '    echo "Sleeping for 5"
+
+                    ', '    sleep 5
+
+                    ', 'done
+
+                    ', 'if [ ! -z ${agent_id} ]; then
+
+                    ', '    src_aws_plugin=$(/usr/bin/curl -H  "Content-Type: application/json"
+                    -H "Source: cft" ', ' ${ssl_cert} -X GET ', '-k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/agents/${agent_id}/plugins/aws/configs ',
+                  '| grep -w "source" | cut -d":" -f2 | awk -F\" ''{print $(NF-1)}'')
+
+                    ', '    if [ -z ${src_aws_plugin} ]; then
+
+                    ', '        echo "AWS source plugin not already configured"
+
+                    ', '        task_plugin_entry_res=$(curl -H "Source: cft" -H "Content-Type:
+                    application/json" -X POST ', '-k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/agents/${agent_id}/plugins/aws/configs/',
+                  ' ${ssl_cert} -d "{\"configtype\": \"iamrole\", \"regions\" : [\"${region}\"], ',
+                  '\"iamconfigtype\": \"source\"}")
+
+                    ', '        task_plugin_entry=$(echo ${task_plugin_entry_res}
+                    | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''taskid''])")
+
+
+                    ', "        echo \"task_plugin_entry value: $task_plugin_entry\
+                    \ \" \n", "        if  [ ${task_plugin_entry} != null ] && [ !\
+                    \ -z ${task_plugin_entry} ] ; then \n", '            while [ `curl
+                    -H "Content-Type: application/json" -H "Source: cft" ${ssl_cert}
+                    -X GET ', '-k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/tasks/${task_plugin_entry}',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''status''])"`
+                    != "successful" ];
+
+                    ', '            do
+
+                    ', '                echo "Adding plugin entry"
+
+                    ', '                sleep 5
+
+                    ', '                if [ `curl -H "Content-Type: application/json"  -H
+                    "Source: cft" -X GET ', ' ${ssl_cert} -k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/tasks/${task_plugin_entry}',
+                  ' | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''status''])"`
+                    == "failed" ]; then
+
+                    ', '                    echo "Adding plugin entry failed"
+
+                    ', '                    error_exit "Adding plugin entry failed
+                    "
+
+                    ', '                fi
+
+                    ', '            done
+
+                    ', "        else \n", "            echo \"task_plugin_entry value\
+                    \ returned null\" \n", '            error_exit "Task plugin entry
+                    value returned null "
+
+                    ', "        fi \n\n", '    else
+
+                    ', '        echo "AWS source role already configured"
+
+                    ', '    fi
+
+                    ', 'else
+
+                    ', '    echo "Off host agent not found"
+
+                    ', '    error_exit "Off host agent not found "
+
+                    ', 'fi
+
+
+                    ', 'policy_exists=""
+
+                    ', 'policy_exists=$(/usr/bin/curl -H "Content-Type: application/json"
+                    ${ssl_cert} ', '-H "Source: cft" -X GET ', '-k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/policies/?name=backupsnapmgr ',
+                  '| python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[0][''id''])")
+
+                    ', 'if [ -z $policy_exists ]; then
+
+                    ', '        policy_id=$(/usr/bin/curl -H "Content-type: application/json"
+                    -H "Source: cft"', ' -X POST ${ssl_cert} ', '-d "{\"name\":\"backupsnapmgr\",
+                    \"appConsist\": true, ', '\"protectionLevel\":\"disk\", ', '\"schedule\":{\"minute\":\"0\",
+                    \"hour\":\"0\", ', '\"mday\":\"*\", \"month\":\"*\", \"wday\":\"*\"}, ',
+                  '\"tag\": \"A built-in protection policy that takes periodic snapshots
+                    of the Snapshot Manager metadata. If the original instance fails
+                    to respond, the latest snapshot created by this policy is used
+                    to create a new Snapshot Manager instance in the cloud.\", \"replicate\":true, ',
+                  '\"retention\":{\"unit\":\"snapshots\",\"value\":3}, ', '\"snapTags\":[{\"key\":\"Protection\",
+                    \"value\":\"${policy_tag}\"}]}" ', '-k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/policies/
+                    | python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''id''])")
+
+                    ', "        \n", '    echo "Policy $policy_id created"
+
+                    ', 'else
+
+                    ', '    policy_id=${policy_exists}
+
+                    ', '    echo "Policy backupsnapmgr exists"
+
+                    ', '    echo "Updating snaptags in the existing policy $policy_id"
+
+                    ', '    data=$(/usr/bin/curl -H "Content-Type: application/json"
+                    -H "Source: cft" ', '${ssl_cert} -X GET -k ', 'https://${instance_ip}:${port}/cloudpoint/api/${api_version}/policies/${policy_id} ',
+                  '| python3 -c "import sys, json; tmp = json.load(sys.stdin); ',
+                  'tmp.update({\"snapTags\":[{\"key\":\"Protection\" ,', '\"value\":\"${policy_tag}\"}]}); ',
+                  'del tmp[\"id\"]; print(json.dumps(tmp))")
+
+                    ', '    policy_id=$(curl -k -X PUT -H "Content-type: application/json" ',
+                  '-H "Source: cft" -d "${data}" ${ssl_cert} ', '-k https://${instance_ip}:${port}/cloudpoint/api/${api_version}/policies/${policy_id} ',
+                  '| python3 -c "import sys, json; tmp = json.load(sys.stdin); print(tmp[''id''])")
+
+                    ', '    echo "Updated snaptags in the existing policy $policy_id"
+
+                    ', 'fi
+
+                    ', 'sleep 120
+
+                    ', '
+
+                    ']]
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/install_cp:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', cp_http_proxy=, !Ref 'NBSMHttpProxy', '
+
+                    ', cp_https_proxy=, !Ref 'NBSMHttpsProxy', '
+
+                    ', cp_no_proxy=, !Ref 'NBSMNoProxy', '
+
+                    ', 'if [ -z ${cp_http_proxy} ] || [ -z ${cp_https_proxy} ]; then
+
+                    ', '    cp_proxy=false
+
+                    ', 'else
+
+                    ', '    cp_proxy=true
+
+                    ', 'fi
+
+                    ', 'if [ -z ${cp_no_proxy} ]; then
+
+                    ', '    cp_no_proxy="169.254.169.254"
+
+                    ', 'fi
+
+                    ', 'echo "cp_proxy=$cp_proxy" > /tmp/install_cp_env
+
+                    ', '
+
+                    ', 'if [ $cp_proxy == "true" ]; then
+
+                    ', 'echo "export http_proxy=$cp_http_proxy" >> /etc/profile.d/proxy.sh
+
+                    ', 'echo "export https_proxy=$cp_https_proxy" >> /etc/profile.d/proxy.sh
+
+                    ', 'echo "export no_proxy=$cp_no_proxy" >> /etc/profile.d/proxy.sh
+
+                    ', 'echo "cp_http_proxy=$cp_http_proxy" >> /tmp/install_cp_env
+
+                    ', 'echo "cp_https_proxy=$cp_https_proxy" >> /tmp/install_cp_env
+
+                    ', 'echo "cp_no_proxy=$cp_no_proxy" >> /tmp/install_cp_env
+
+                    ', 'cp /etc/sudoers /tmp/sudoers.new
+
+                    ', 'chmod 640 /tmp/sudoers.new
+
+                    ', 'echo "Defaults env_keep += \"http_proxy https_proxy no_proxy\""
+                    >>/tmp/sudoers.new
+
+                    ', 'chmod 440 /tmp/sudoers.new
+
+                    ', 'visudo -c -f /tmp/sudoers.new && cp /tmp/sudoers.new /etc/sudoers
+
+                    ', 'fi
+
+                    ']]
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/register_cp:
+              content: !Join ['', ['#!/bin/bash
+
+                    ', 'export PATH=/usr/local/bin:$PATH
+
+                    ', nbu_server=, !Ref 'NBServer', '
+
+                    ', nbu_api_token=, !Ref 'NBAPIKey', '
+
+                    ', elastic_ip=, !Ref 'NBSMElasticIP', '
+
+                    ', cp_vpc_domain=, !Ref 'NBSMVPCDomainName', '
+
+                    ', hosts=, !Ref 'NBSMServerName', '
+
+                    ', volume_id=, !Ref 'NBSMVolumeID', '
+
+                    ', snap_id=, !Ref 'NBSMVolumeSnapshot', '
+
+                    ', 'TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token"
+                    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")', '
+
+                    ', 'public_name=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
+
+                    ', 'public_ip=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+
+                    ', 'local_name=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/local-hostname)
+
+                    ', 'local_ip=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4)
+
+                    ', 'if [ -z ${elastic_ip} ]; then
+
+                    ', '    cp_servers="${local_name} ${local_ip} ${public_name} ${public_ip}"
+
+                    ', 'else
+
+                    ', '    cp_servers="${public_name} ${public_ip} ${local_name}
+                    ${local_ip}"
+
+                    ', 'fi
+
+                    ', "if [[ ! -z ${cp_vpc_domain}  && ! -z ${hosts} ]]; then \n",
+                  "    vm_name_fqdn=$hosts.$cp_vpc_domain \n", '    cp_servers="${vm_name_fqdn}
+                    ${cp_servers}"
+
+                    ', 'fi
+
+                    ', cp_port=, !Ref 'NBSMPort', '
+
+                    ', region=, !Ref 'AWS::Region', '
+
+                    ', 'if [ -z ${nbu_server} ] || [ -z ${nbu_api_token} ]; then
+
+                    ', "    message=\"NBU details not provided. Please register NBSM\
+                    \ with NBU primary ${nbu_server}\" \n", '    CFN_SIG=`which cfn-signal`
+
+                    ', '    $CFN_SIG -e 0 -r "$message" ''', !Ref 'errorWaitHandle',
+                  '''
+
+                    ', '    exit 0
+
+                    ', 'else
+
+                    ', '  if [ ! -z ${volume_id} ] || [ ! -z ${snap_id} ]; then
+
+                    ', "    message=\"NBSM is already registered with NBU. Please\
+                    \ re-register NBSM with NBU primary ${nbu_server}\" \n", '    CFN_SIG=`which
+                    cfn-signal`
+
+                    ', '    $CFN_SIG -e 0 -r "$message" ''', !Ref 'errorWaitHandle',
+                  '''
+
+                    ', '    exit 0
+
+                    ', '  fi
+
+                    ', 'for cp_server in $cp_servers
+
+                    ', 'do
+
+                    ', '  echo "Trying to register with cp_server ${cp_server}" >&2
+
+                    ', '  /usr/bin/curl -X POST -H "Content-type: application/json"
+                    -H "Authorization: $nbu_api_token" ', '-d "{\"data\":{\"type\":
+                    \"snapshotMgmtServer\", \"id\":\"$cp_server\", ', '\"attributes\":{\"hostname\":\"$cp_server\",
+                    \"port\":\"$cp_port\", ', '\"manageWorkload\":\"CLOUD\"}}}"',
+                  ' -k https://${nbu_server}:443/netbackup/config/servers/snapshot-mgmt-servers
+
+                    ', '   if [ $? -eq 0 ]; then
+
+                    ', '       message="Snapshot Manager Successfully registered with
+                    NetBackup server" >&2
+
+                    ', '       break
+
+                    ', '   else
+
+                    ', '       message="ERROR: Snapshot Manager registration failed"
+                    >&2
+
+                    ', '  fi
+
+                    ', 'done
+
+                    ', 'fi
+
+                    ', 'CFN_SIG=`which cfn-signal`
+
+                    ', $CFN_SIG -e 0 -r "$message" ', !Ref 'errorWaitHandle', '''
+
+                    ']]
+          commands:
+            1-set_exec:
+              command: !Join ['', [chmod 500 /tmp/attach_volume /tmp/configure_cp
+                    /tmp/instance_attach /tmp/backup_fluentd_conf /tmp/install_cp
+                    /tmp/update_securitygroup /tmp/register_cp]]
+            2-set-proxy:
+              command: /tmp/install_cp
+              cwd: '~'
+            3-set-env:
+              command: . /etc/profile.d/proxy.sh
+              test: test -e /etc/profile.d/proxy.sh
+              cwd: '~'
+            4-update_securitygroup:
+              command: /tmp/update_securitygroup
+            5-attach_to_asg:
+              command: /tmp/instance_attach
+              cwd: '~'
+            6-attach_cloudpoint_volume:
+              command: /tmp/attach_volume /cloudpoint
+              cwd: '~'
+            7-backup_fluentd_file:
+              command: /tmp/backup_fluentd_conf
+              cwd: '~'
+            9-configure_cp:
+              command: /tmp/configure_cp
+              cwd: '~'
+            97-register_cp:
+              command: /tmp/register_cp
+              cwd: '~'
+            98-cloudpoint_cft_done:
+              command: /usr/bin/touch /cloudpoint/cloudpoint_cft_done
+            99-cloudpoint_remove_config_files:
+              command: '#rm -rf /tmp/attach_volume /tmp/configure_cp /tmp/instance_attach
+                /tmp/install_cp /tmp/update_securitygroup /tmp/register_cp'
+    Properties:
+      ImageId: !FindInMap [AWSAMIRegionMap, !Ref 'AWS::Region', AMI]
+      InstanceType: !Ref 'NBSMInstanceType'
+      IamInstanceProfile: !Ref 'InstanceProfile'
+      SecurityGroupIds:
+      - !GetAtt [CloudPointSecurityGroup, GroupId]
+      SubnetId: !Ref 'NBSMSubnet'
+      KeyName: !Ref 'KeyName'
+      AvailabilityZone: !Ref 'NBSMAvailabilityZone'
+      BlockDeviceMappings:
+      - DeviceName: /dev/sda1
+        Ebs:
+          VolumeType: gp2
+          DeleteOnTermination: 'false'
+          VolumeSize: 60
+      UserData: !Base64
+        Fn::Join:
+        - ''
+        - - '#!/bin/bash -x
+
+            '
+          - 'export PATH=/usr/local/bin:$PATH
+
+            '
+          - cp_http_proxy=
+          - !Ref 'NBSMHttpProxy'
+          - '
+
+            '
+          - cp_https_proxy=
+          - !Ref 'NBSMHttpsProxy'
+          - '
+
+            '
+          - cp_no_proxy=
+          - !Ref 'NBSMNoProxy'
+          - '
+
+            '
+          - 'if [ -z ${cp_http_proxy} ] || [ -z ${cp_https_proxy} ]; then
+
+            '
+          - '    cp_proxy=false
+
+            '
+          - 'else
+
+            '
+          - '    cp_proxy=true
+
+            '
+          - 'fi
+
+            '
+          - 'cp_min_no_proxy="169.254.169.254,localhost"
+
+            '
+          - 'if [ ! -z ${cp_no_proxy} ]; then
+
+            '
+          - '    cp_no_proxy="${cp_no_proxy},${cp_min_no_proxy}"
+
+            '
+          - 'else
+
+            '
+          - '    cp_no_proxy="${cp_min_no_proxy}"
+
+            '
+          - 'fi
+
+            '
+          - 'echo "cp_proxy=$cp_proxy" > /tmp/install_cp_env
+
+            '
+          - '
+
+            '
+          - 'if [ $cp_proxy == "true" ]; then
+
+            '
+          - 'echo "export http_proxy=$cp_http_proxy" >> /etc/profile.d/proxy.sh
+
+            '
+          - 'echo "export https_proxy=$cp_https_proxy" >> /etc/profile.d/proxy.sh
+
+            '
+          - 'echo "export no_proxy=$cp_no_proxy" >> /etc/profile.d/proxy.sh
+
+            '
+          - 'echo "cp_http_proxy=$cp_http_proxy" >> /tmp/install_cp_env
+
+            '
+          - 'echo "cp_https_proxy=$cp_https_proxy" >> /tmp/install_cp_env
+
+            '
+          - 'echo "cp_no_proxy=$cp_no_proxy" >> /tmp/install_cp_env
+
+            '
+          - 'cp /etc/sudoers /tmp/sudoers.new
+
+            '
+          - 'chmod 640 /tmp/sudoers.new
+
+            '
+          - 'echo "Defaults env_keep += \"http_proxy https_proxy no_proxy\"" >>/tmp/sudoers.new
+
+            '
+          - 'chmod 440 /tmp/sudoers.new
+
+            '
+          - 'visudo -c -f /tmp/sudoers.new && cp /tmp/sudoers.new /etc/sudoers
+
+            '
+          - '#apt-get update -y
+
+            '
+          - '. /etc/profile.d/proxy.sh
+
+            '
+          - 'fi
+
+            '
+          - '# Install AWS cfn-bootstrap utilities
+
+            '
+          - 'if [ -f /etc/lsb-release ]; then
+
+            '
+          - '    cp /usr/local/init/ubuntu/cfn-hup /etc/init.d/cfn-hup
+
+            '
+          - '    chmod +x /etc/init.d/cfn-hup
+
+            '
+          - '    update-rc.d cfn-hup defaults
+
+            '
+          - '    service cfn-hup start
+
+            '
+          - 'else
+
+            '
+          - '    cp /usr/local/init/redhat/cfn-hup /etc/init.d/cfn-hup
+
+            '
+          - '    chmod +x /etc/init.d/cfn-hup
+
+            '
+          - '    chkconfig cfn-hup on
+
+            '
+          - '    systemctl start cfn-hup.service
+
+            '
+          - 'fi
+
+            '
+          - '# Configure instance as specified in the metadata
+
+            '
+          - 'CFN_INIT=`which cfn-init`
+
+            '
+          - 'if [ $cp_proxy == "true" ]; then
+
+            '
+          - '# Configure instance as specified in the metadata
+
+            '
+          - $CFN_INIT -v
+          - ' --stack '
+          - !Ref 'AWS::StackName'
+          - ' --resource CloudPointInstance'
+          - ' --configsets ConfigCloudPointInstance'
+          - ' --region '
+          - !Ref 'AWS::Region'
+          - ' --http-proxy $http_proxy'
+          - ' --https-proxy $https_proxy'
+          - '
+
+            '
+          - '
+
+            '
+          - 'else
+
+            '
+          - '# Configure instance as specified in the metadata
+
+            '
+          - $CFN_INIT -v
+          - ' --stack '
+          - !Ref 'AWS::StackName'
+          - ' --resource CloudPointInstance'
+          - ' --configsets ConfigCloudPointInstance'
+          - ' --region '
+          - !Ref 'AWS::Region'
+          - '
+
+            '
+          - 'fi
+
+            '
+          - '
+
+            '
+          - 'CFN_SIG=`which cfn-signal`
+
+            '
+          - $CFN_SIG -e $? "
+          - !Ref 'myWaitHandle'
+          - '"
+
+            '
+  CloudPointEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Condition: AssignElasticIP
+    Properties:
+      EIP: !Ref 'NBSMElasticIP'
+      InstanceId: !Ref 'CloudPointInstance'
+    DeletionPolicy: Retain
+Outputs:
+  CloudPointInstanceId:
+    Value: !Ref 'CloudPointInstance'
+    Description: ID of the Snapshot Manager instance.
+  PublicDNS:
+    Description: Public URL for the Snapshot Manager instance
+    Value: !Join ['', ['https://', !GetAtt [CloudPointInstance, PublicDnsName]]]
+  PrivateDNS:
+    Description: Private URL for the Snapshot Manager instance
+    Value: !Join ['', ['https://', !GetAtt [CloudPointInstance, PrivateDnsName]]]
+Rules:
+  SubnetsInVPC:
+    Assertions:
+    - Assert: !EachMemberIn [!ValueOfAll ['AWS::EC2::Subnet::Id', VpcId], !RefAll 'AWS::EC2::VPC::Id']
+      AssertDescription: Subnet must be a part of the selected VPC
+  SubnetsInAZ:
+    Assertions:
+    - Assert: !EachMemberIn [!ValueOfAll ['AWS::EC2::Subnet::Id', AvailabilityZone],
+        !RefAll 'AWS::EC2::AvailabilityZone::Name']
+      AssertDescription: Subnet must be a part of the selected Availability Zone
+  NBServerNotEmpty:
+    Assertions:
+    - Assert: !Not [!Equals [!Ref 'NBServer', '']]
+      AssertDescription: NBServer cannot be empty
+  NBAPIKeyNotEmpty:
+    Assertions:
+    - Assert: !Not [!Equals [!Ref 'NBAPIKey', '']]
+      AssertDescription: NBAPIKey cannot be empty
